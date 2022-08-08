@@ -79,7 +79,6 @@ client.on('message', async (message, ack) => {
         let button_data = [{id:'customId',body:'bt1'},{body:'bt2'},{body:'bt3'}];
         let btn = new Buttons('Button body',button_data,'title','footer');
         await client.sendMessage(message.from, btn);
-
     } else if(req === '/start' || req === 'hi' || req === 'hello' || req === 'hay' || req === 'assalamualaikum') {
         const contact = await message.getContact();
         let sections = [{title:'PILIH LAYANAN',rows:[{id: '/pegawai',title:'PEGAWAI', description: 'Profile Pegawai'},{id: '/pensiun',title:'PENSIUNAN', description: 'Persyaratan Pensiun'}]}];
@@ -105,7 +104,6 @@ client.on('message', async (message, ack) => {
         return false;
       }
       dtpeg.pegawai(req_nipnik).then(res => {
-        console.log(res)
         if(res.status !== 200) {
             client.sendMessage(message.from, 'ERR_BAD_REQUEST | SERVER NOT CONNECT');
             return;
@@ -113,9 +111,7 @@ client.on('message', async (message, ack) => {
 
         if(res.data[0].kind === true) {
           client.sendMessage(message.from, res.data[0].message.toUpperCase());
-          client.sendMessage(message.from, `
-              *ID*\n${res.data[0].id}\n\n*NAMA*\n ${res.data[0].nama}\n\n*JENIS KELAMIN*\n ${res.data[0].jk}\n\n*UMUR*\n ${res.data[0].umur}n
-            `);   
+          client.sendMessage(message.from, `*ID*\n${res.data[0].id}\n\n*NAMA*\n${res.data[0].nama}\n\n*JENIS KELAMIN*\n${res.data[0].jk}\n\n*UMUR*\n${res.data[0].umur} Tahun`);   
         } else {
           client.sendMessage(message.from, res.data[0].message);
         }

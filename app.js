@@ -6,19 +6,16 @@ const path = require('path');
 const client = new Client({
 restartOnAuthFail: true,
 puppeteer: {
-  headless: true,
-  args: [
-    '--no-sandbox',
-    '--disable-setuid-sandbox',
-    '--disable-dev-shm-usage',
-    '--disable-accelerated-2d-canvas',
-    '--no-first-run',
-    '--no-zygote',
-    '--single-process', // <- this one doesn't works in Windows
-    '--disable-gpu'
-  ],
+  headless: true
 },
 authStrategy: new LocalAuth()
+});
+
+
+client.initialize();
+
+client.on('loading_screen', (percent, message) => {
+    console.log('LOADING SCREEN', percent, message);
 });
 
 client.on('qr', (qr) => {
@@ -33,8 +30,9 @@ client.on('authenticated', () => {
     console.log('Log =>', 'Whatsapp is authenticated!');
 });
 
-client.on('auth_failure', function() {
-    console.log('Log =>', 'Auth failure, restarting...');
+client.on('auth_failure', msg => {
+    // Fired if session restore was unsuccessful
+    console.error('AUTHENTICATION FAILURE', msg);
 });
 
 client.on('disconnected', (reason) => {
@@ -51,9 +49,7 @@ const cek_validate = require('./helpers/validations');
 // MESSAGE REPLY
 client.on('message', async (message) => {
     if(message.body === '!ping') {
-        const yt = await MessageMedia.fromUrl('https://www.youtube.com/watch?v=Y6ghFjumFfI', {unsafeMime: true});
-        await client.sendMessage(message.from, yt, {linkPreview: true});
-        console.log(await message.getQuotedMessage());
+        await client.sendMessage(message.from, 'https://www.youtube.com/watch?v=Y6ghFjumFfI', {linkPreview: true});
     }
 });
 
@@ -80,9 +76,9 @@ client.on('message', async (message, ack) => {
         let btn = new Buttons('Button body',button_data,'title','footer');
         await client.sendMessage(message.from, btn);
     } else if(req === '/start' || req === 'hi' || req === 'hello' || req === 'hay' || req === 'assalamualaikum') {
-        const contact = await message.getContact();
+        // const contact = await message.getContact();
         let sections = [{title:'PILIH LAYANAN',rows:[{id: '/pegawai',title:'PEGAWAI', description: 'Profile Pegawai'},{id: '/pensiun',title:'PENSIUNAN', description: 'Persyaratan Pensiun'}]}];
-        let list = new List(`👋 Hello! @${contact.name}, perkenalkan saya Putra asistan layanan info pegawai. Silahkan pilih *menu* di bawah ini untuk detail layanan.`,'MENU',sections,'LAYANAN INFORMASI KEPEGAWAIAN','footer');
+        let list = new List(`👋 Hello! , perkenalkan saya Putra asistan layanan info pegawai. Silahkan pilih *menu* di bawah ini untuk detail layanan.`,'MENU',sections,'LAYANAN INFORMASI KEPEGAWAIAN','footer');
         client.sendMessage(message.from, list);
     } else if(message.selectedRowId === '/pegawai') {
         await client.sendMessage(message.from, `Silahkan masukan *NIP* *(PNS)* dan *NIK* *(NON PNS)*\n\n*FORMAT:* \nID<undescure>NIP/NIK\n\n*CONTOH:*\nID${separator}XXXXXXXXXXX\n\n*CATATAN:*\nXXX ganti menjadi NIP/NIK anda`);
@@ -123,4 +119,3 @@ client.on('message', async (message, ack) => {
         }
     }
 });
-client.initialize();
